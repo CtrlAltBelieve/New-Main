@@ -83,9 +83,9 @@ local function makeKillQuest(questName)
 end
 
 -- Function to fire the remote for a dungeon specific quest
-local function makeDungeonQuest(DungeonquestName)
+local function makeDungeonQuest(dungeonQuestName)
     local args = {
-        [1] = DungeonquestName
+        [1] = dungeonQuestName
     }
     game:GetService("ReplicatedStorage"):WaitForChild("Main"):WaitForChild("Remotes"):WaitForChild("MakeDungeonQuest"):FireServer(unpack(args))
 end
@@ -105,7 +105,7 @@ local function fireRemotes(path, remoteName)
         }
         game:GetService("ReplicatedStorage").Main.Remotes[remoteName]:FireServer(unpack(args))
     end
-end
+}
 
 local Window = OrionLib:MakeWindow({
     Name = "zo's shitterhub",
@@ -248,92 +248,74 @@ for _, questName in ipairs(questNames) do
 end
 
 -- DUNGEON QUESTS
--- Create a tab for Quest Toggles
+-- Create a tab for Dungeon Quest Toggles
 local Tab3 = Window:MakeTab({
     Name = "Dungeon Quests",
     Icon = "rbxassetid://464093673",
     PremiumOnly = false
 })
 
--- Table to keep track of toggled quests
+-- Table to keep track of toggled dungeon quests
 local activeDungeonQuests = {}
 
--- Function to handle quest toggles
-local function toggleDungeonQuest(questName, value)
+-- Function to handle dungeon quest toggles
+local function toggleDungeonQuest(dungeonQuestName, value)
     OrionLib:MakeNotification({
         Name = "Dungeon Quest Toggles",
-        Content = string.format("%s toggle: %s", questName, tostring(value)),
+        Content = string.format("%s toggle: %s", dungeonQuestName, tostring(value)),
         Image = "rbxassetid://464093673",
         Time = 3
     })
     if value then
-        activeDungeonQuests[questName] = true
-        -- Loop to repeatedly get the quest until the toggle is turned off
+        activeDungeonQuests[dungeonQuestName] = true
+        -- Loop to repeatedly get the dungeon quest until the toggle is turned off
         spawn(function()
-            while activeDungeonQuests[questName] do
-                makeDungeonQuest(questName)
+            while activeDungeonQuests[dungeonQuestName] do
+                makeDungeonQuest(dungeonQuestName)  -- Corrected function call
                 wait(2)  -- Adjust the interval as needed
             end
         end)
     else
-        activeDungeonQuests[questName] = nil
+        activeDungeonQuests[dungeonQuestName] = nil
     end
 end
 
--- List of Dungeon Quest names
+-- List of dungeon quest names
 local dungeonQuestNames = {
-    "Earth Knight",
+    "Valley Castle", "Angel Nest", "Goblin Camp", "Goblin Cave", "Raptor Nest", "Sand Shrine", "Wolfen Castle", "Tundra Castle",
 }
 
--- Loop through questNames to create toggles for each quest
-for _, questName in ipairs(dungeonQuestNames) do
+-- Loop through dungeonQuestNames to create toggles for each dungeon quest
+for _, dungeonQuestName in ipairs(dungeonQuestNames) do
     Tab3:AddToggle({
-        Name = questName,
+        Name = dungeonQuestName,
         Default = false,
         Callback = function(value)
-            toggleDungeonQuest(questName, value)
+            toggleDungeonQuest(dungeonQuestName, value)  -- Corrected function call
         end
     })
 end
 
--- Functions for remotes
-local lootPath = game:GetService("ReplicatedStorage"):FindFirstChild("Loot")
-local weaponPath = game:GetService("ReplicatedStorage"):FindFirstChild("Weapons")
-local legendaryPath = game:GetService("ReplicatedStorage"):FindFirstChild("Legendary")
-
-Tab1:AddButton({
-    Name = "Use Loot Remote",
-    Callback = function()
-        if lootPath then
-            fireRemotes(lootPath, "UseLootRemote")
-        end
-    end
+-- Create a tab for Misc Toggles
+local Tab4 = Window:MakeTab({
+    Name = "Misc Toggles",
+    Icon = "rbxassetid://464093673",
+    PremiumOnly = false
 })
 
-Tab1:AddButton({
-    Name = "Open Weapons",
-    Callback = function()
-        if weaponPath then
-            fireRemotes(weaponPath, "OpenWeapons")
-        end
+-- Toggle button for Auto use all Loot items
+Tab4:AddToggle({
+    Name = "Auto use all Loot items",
+    Default = false,
+    Callback = function(value)
+        usingLootRemote = value
+        OrionLib:MakeNotification({
+            Name = "Misc Toggles",
+            Content = string.format("Auto use all Loot items toggled: %s", tostring(usingLootRemote)),
+            Image = "rbxassetid://464093673",
+            Time = 3
+        })
     end
-})
-
-Tab1:AddButton({
-    Name = "Open Legendary",
-    Callback = function()
-        if legendaryPath then
-            fireRemotes(legendaryPath, "OpenLegendary")
-        end
-    end
-})
-
--- Notification when the script is loaded
-OrionLib:MakeNotification({
-    Name = "Autofarm Script",
-    Content = "Script loaded",
-    Image = "rbxassetid://464093673",
-    Time = 3
 })
 
 OrionLib:Init()
