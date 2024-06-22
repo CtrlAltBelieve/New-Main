@@ -6,7 +6,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
-local teleportDistance = 130  -- Adjusted default teleport distance to 15 studs
+local teleportDistance = 130  -- Adjusted default teleport distance
 local teleporting = false  -- Flag to control the teleportation loop
 local usingLootRemote = false  -- Flag to control using loot remote
 local openingWeapons = false  -- Flag to control opening weapons
@@ -71,9 +71,6 @@ local function teleportAndFireLoop()
     end
 end
 
--- Start the loop
-teleportAndFireLoop()
-
 -- Function to fire the remote for a specific quest
 local function makeKillQuest(questName)
     local args = {
@@ -105,7 +102,7 @@ local function fireRemotes(path, remoteName)
         }
         game:GetService("ReplicatedStorage").Main.Remotes[remoteName]:FireServer(unpack(args))
     end
-}
+end
 
 local Window = OrionLib:MakeWindow({
     Name = "zo's shitterhub",
