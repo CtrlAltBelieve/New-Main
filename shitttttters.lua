@@ -6,7 +6,7 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 
 local LocalPlayer = Players.LocalPlayer
-local teleportDistance = 130  -- Adjusted default teleport distance
+local teleportDistance = 130  -- Adjusted default teleport distance to 15 studs
 local teleporting = false  -- Flag to control the teleportation loop
 local usingLootRemote = false  -- Flag to control using loot remote
 local openingWeapons = false  -- Flag to control opening weapons
@@ -59,7 +59,7 @@ end
 -- Function to fire a skill by key
 local function fireSkillKey(key)
     VirtualInputManager:SendKeyEvent(true, key, false, game)
-    wait(0.5)  -- Adjusted to 0.5 seconds delay between skill presses
+    wait()  -- Adjusted to 0.5 seconds delay between skill presses
     VirtualInputManager:SendKeyEvent(false, key, false, game)
 end
 
@@ -70,6 +70,9 @@ local function teleportAndFireLoop()
         wait()  -- Adjust the wait time for optimal performance
     end
 end
+
+-- Start the loop
+teleportAndFireLoop()
 
 -- Function to fire the remote for a specific quest
 local function makeKillQuest(questName)
@@ -141,7 +144,6 @@ local toggleButton = Tab1:AddToggle({
                 Image = "rbxassetid://464093673",
                 Time = 3
             })
-            teleporting = true
             spawn(teleportAndFireLoop)
         else
             OrionLib:MakeNotification({
@@ -150,7 +152,6 @@ local toggleButton = Tab1:AddToggle({
                 Image = "rbxassetid://464093673",
                 Time = 3
             })
-            teleporting = false
         end
     end
 })
@@ -247,109 +248,92 @@ for _, questName in ipairs(questNames) do
 end
 
 -- DUNGEON QUESTS
--- Create a tab for Dungeon Quest Toggles
+-- Create a tab for Quest Toggles
 local Tab3 = Window:MakeTab({
     Name = "Dungeon Quests",
     Icon = "rbxassetid://464093673",
     PremiumOnly = false
 })
 
--- Table to keep track of toggled dungeon quests
+-- Table to keep track of toggled quests
 local activeDungeonQuests = {}
 
--- Function to handle dungeon quest toggles
-local function toggleDungeonQuest(DungeonquestName, value)
+-- Function to handle quest toggles
+local function toggleDungeonQuest(questName, value)
     OrionLib:MakeNotification({
-        Name = "Quest Toggles",
-        Content = string.format("%s toggle: %s", DungeonquestName, tostring(value)),
+        Name = "Dungeon Quest Toggles",
+        Content = string.format("%s toggle: %s", questName, tostring(value)),
         Image = "rbxassetid://464093673",
         Time = 3
     })
     if value then
-        activeDungeonQuests[DungeonquestName] = true
+        activeDungeonQuests[questName] = true
         -- Loop to repeatedly get the quest until the toggle is turned off
         spawn(function()
-            while activeDungeonQuests[DungeonquestName] do
-                makeDungeonQuest(DungeonquestName)
+            while activeDungeonQuests[questName] do
+                makeDungeonQuest(questName)
                 wait(2)  -- Adjust the interval as needed
             end
         end)
     else
-        activeDungeonQuests[DungeonquestName] = nil
+        activeDungeonQuests[questName] = nil
     end
 end
 
--- List of Dungeon quest names
-local DungeonquestNames = {
-    "Tundra Wolves Dungeon", "Tundra Wolves Dungeon2", "Skar Boss Dungeon"
+-- List of Dungeon Quest names
+local dungeonQuestNames = {
+    "Earth Knight",
 }
 
--- Loop through DungeonquestNames to create toggles for each quest
-for _, DungeonquestName in ipairs(DungeonquestNames) do
+-- Loop through questNames to create toggles for each quest
+for _, questName in ipairs(dungeonQuestNames) do
     Tab3:AddToggle({
-        Name = DungeonquestName,
+        Name = questName,
         Default = false,
         Callback = function(value)
-            toggleDungeonQuest(DungeonquestName, value)
+            toggleDungeonQuest(questName, value)
         end
     })
 end
 
--- Create a tab for Loot
-local Tab4 = Window:MakeTab({
-    Name = "Loot",
-    Icon = "rbxassetid://464093673",
-    PremiumOnly = false
-})
+-- Functions for remotes
+local lootPath = game:GetService("ReplicatedStorage"):FindFirstChild("Loot")
+local weaponPath = game:GetService("ReplicatedStorage"):FindFirstChild("Weapons")
+local legendaryPath = game:GetService("ReplicatedStorage"):FindFirstChild("Legendary")
 
--- Checkbox to toggle using the loot remote
-Tab4:AddToggle({
-    Name = "Toggle Use Loot Remote",
-    Default = false,
-    Callback = function(value)
-        usingLootRemote = value
-        OrionLib:MakeNotification({
-            Name = "Loot Remote",
-            Content = string.format("Using loot remote toggled: %s", tostring(usingLootRemote)),
-            Image = "rbxassetid://464093673",
-            Time = 3
-        })
-        -- If toggled on, use the loot remote
-        if usingLootRemote then
-            spawn(function()
-                local path = LocalPlayer.Backpack
-                while usingLootRemote do
-                    fireRemotes(path, "UseLootRemote")
-                    wait(1)  -- Adjust the wait time for optimal performance
-                end
-            end)
+Tab1:AddButton({
+    Name = "Use Loot Remote",
+    Callback = function()
+        if lootPath then
+            fireRemotes(lootPath, "UseLootRemote")
         end
     end
 })
 
--- Checkbox to toggle opening all weapons
-Tab4:AddToggle({
-    Name = "Toggle Open All Weapons",
-    Default = false,
-    Callback = function(value)
-        openingWeapons = value
-        OrionLib:MakeNotification({
-            Name = "Loot Remote",
-            Content = string.format("Opening weapons toggled: %s", tostring(openingWeapons)),
-            Image = "rbxassetid://464093673",
-            Time = 3
-        })
-        -- If toggled on, open all weapons
-        if openingWeapons then
-            spawn(function()
-                local path = LocalPlayer.Backpack
-                while openingWeapons do
-                    fireRemotes(path, "OpenAllWeapons")
-                    wait(1)  -- Adjust the wait time for optimal performance
-                end
-            end)
+Tab1:AddButton({
+    Name = "Open Weapons",
+    Callback = function()
+        if weaponPath then
+            fireRemotes(weaponPath, "OpenWeapons")
         end
     end
+})
+
+Tab1:AddButton({
+    Name = "Open Legendary",
+    Callback = function()
+        if legendaryPath then
+            fireRemotes(legendaryPath, "OpenLegendary")
+        end
+    end
+})
+
+-- Notification when the script is loaded
+OrionLib:MakeNotification({
+    Name = "Autofarm Script",
+    Content = "Script loaded",
+    Image = "rbxassetid://464093673",
+    Time = 3
 })
 
 OrionLib:Init()
